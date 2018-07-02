@@ -2,271 +2,307 @@
 	<head>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.js"></script>
 		<script>
-const gridsize = 250;
-const gapsize = 50
-const squareSize = 80;
+			const gridsize = 250;
+			const gapsize = 50
+			const squareSize = 80;
 
-squares = [];
-next = -1;
-player = 1;
-winner = -1;
-occupiedBig = [-1, -1, -1, -1, -1, -1, -1, -1, -1];
+			squares = [];
+			next = -1;
+			player = 1;
+			winner = -1;
+			occupiedBig = [-1, -1, -1, -1, -1, -1, -1, -1, -1];
 
-function setup(){
-	createCanvas(950, 1500);
-	setupGrids();
-}
+			function setup(){
+				createCanvas(950, 1500);
+				setupGrids();
+			}
 
-function draw(){
-	if (winner < 0){
-		background("#ADADAD");
-	}
-	else if (winner == 1){
-		background("#2860ff");
-	}
-	else {
-		background("#ff2828");
-	}
-	drawGrids();
-	for (let i = 0 ; i<9 ; i++){
-		for (let j = 0 ; j<9 ; j++){
-			squares[i][j].show();
-		}
-	}
-	if (next >= 0){
-		drawHighLight();
-	}
-	
-	if (winner < 0){
-		if (player == 1){
-			stroke('#6d93ff');
-			fill('#6d93ff');
-		}
-		else {
-			stroke('#ff6d6d');
-			fill('#ff6d6d');
-		}
-		strokeWeight(1);
-		textSize(60);
-		textAlign(CENTER);
-		text("Player " + (2-player) + "'s turn", width / 2, 200);
-		text("Player " + (2-player) + "'s turn", width / 2, 1350);	
-	}
-	else {
-		stroke('#FFFFFF');
-		fill('#FFFFFF');
-		strokeWeight(1);
-		textSize(60);
-		textAlign(CENTER);
-		text("Player " + (2-winner) + " won the game", width / 2, 200);
-		text("Player " + (2-winner) + " won the game", width / 2, 1350);	
-	}
-}
+			function draw(){
+				if (winner < 0){
+					background("#ADADAD");
+				}
+				else if (winner == 1){
+					background("#2860ff");
+				}
+				else {
+					background("#ff2828");
+				}
+				drawGrids();
+				for (let i = 0 ; i<9 ; i++){
+					for (let j = 0 ; j<9 ; j++){
+						squares[i][j].show();
+					}
+				}
+				if (next > 0 && fullOccupied(next)){
+					for (let i = 0 ; i<9 ; i++){
+						if (next != i){
+							squares[next][i].tmpopen = true;
+						}
+						squares[next][i].show2(next, i);
+					}
+				}
+				if (next >= 0){
+					drawHighLight();
+				}
+				
+				if (winner < 0){
+					if (player == 1){
+						stroke('#6d93ff');
+						fill('#6d93ff');
+					}
+					else {
+						stroke('#ff6d6d');
+						fill('#ff6d6d');
+					}
+					strokeWeight(1);
+					textSize(60);
+					textAlign(CENTER);
+					text("Player " + (2-player) + "'s turn", width / 2, 200);
+					text("Player " + (2-player) + "'s turn", width / 2, 1350);	
+				}
+				else {
+					stroke('#FFFFFF');
+					fill('#FFFFFF');
+					strokeWeight(1);
+					textSize(60);
+					textAlign(CENTER);
+					text("Player " + (2-winner) + " won the game", width / 2, 200);
+					text("Player " + (2-winner) + " won the game", width / 2, 1350);	
+				}
+			}
 
-function mousePressed(){
-	if (winner < 0){
-		if (next >= 0){
-			for (let j = 0 ; j<9 ; j++){
-				if (squares[next][j].onClick(player)){
-					if (occupiedBig[next] == -1){
-						if (check(next)){
-							if (checkBig()){
-								winner = player;
+			function mousePressed(){
+				if (winner < 0){
+					if (next >= 0){
+						for (let j = 0 ; j<9 ; j++){
+							if (squares[next][j].onClick(player)){
+								if (occupiedBig[next] == -1){
+									if (check(next)){
+										if (checkBig()){
+											winner = player;
+										}
+									}	
+								}
+								next = j;
+								player++;
+								player %= 2;
+							}
+						}
+					}
+					else {
+						for (let i = 0 ; i<9 ; i++){
+							for (let j = 0 ; j<9 ; j++){
+								if (squares[i][j].onClick(player)){
+									next = j;
+									player++;
+									player %= 2;
+								}
 							}
 						}	
+					}	
+				}
+				
+			}
+
+			function check(idx){
+				let tmp = squares[idx];
+				for (let i = 0 ; i<9 ; i+=3){
+					if (tmp[i].occupied == -1 || tmp[i+1].occupied == -1 || tmp[i+2].occupied == -1){
+						continue;
 					}
-					next = j;
-					player++;
-					player %= 2;
+					if (tmp[i].occupied == tmp[i+1].occupied && tmp[i+1].occupied == tmp[i+2].occupied){
+						occupiedBig[idx] = player;
+						return true;
+					}
+				}
+				for (let i = 0 ; i<3 ; i++){
+					if (tmp[i].occupied == -1 || tmp[i+3].occupied == -1 || tmp[i+6].occupied == -1){
+						continue;
+					}
+					if (tmp[i].occupied == tmp[i+3].occupied && tmp[i+3].occupied == tmp[i+6].occupied){
+						occupiedBig[idx] = player;
+						return true;
+					}
+				}
+				if (tmp[0].occupied != -1 && tmp[4].occupied != -1 && tmp[8].occupied != -1 && tmp[0].occupied == tmp[4].occupied && tmp[4].occupied == tmp[8].occupied){
+					occupiedBig[idx] = player;
+					return true;
+				}
+				if (tmp[2].occupied != -1 && tmp[4].occupied != -1 && tmp[6].occupied != -1 && tmp[2].occupied == tmp[4].occupied && tmp[4].occupied == tmp[6].occupied){
+					occupiedBig[idx] = player;
+					return true;
+				}
+				return false;
+			}
+
+			function checkBig(){
+				for (let i = 0 ; i<9 ; i+=3){
+					if (occupiedBig[i] == -1 || occupiedBig[i+1] == -1 || occupiedBig[i+2] == -1){
+						continue;
+					}
+					if (occupiedBig[i] == occupiedBig[i+1] && occupiedBig[i+1] == occupiedBig[i+2]){
+						return true;
+					}
+				}
+				for (let i = 0 ; i<3 ; i++){
+					if (occupiedBig[i] == -1 || occupiedBig[i+3] == -1 || occupiedBig[i+6] == -1){
+						continue;
+					}
+					if (occupiedBig[i] == occupiedBig[i+3] && occupiedBig[i+3] == occupiedBig[i+6]){
+						return true;
+					}
+				}
+				if (occupiedBig[0] != -1 && occupiedBig[4] != -1 && occupiedBig[8] != -1 && occupiedBig[0] == occupiedBig[4] && occupiedBig[4] == occupiedBig[8]){
+					return true;
+				}
+				if (occupiedBig[2] != -1 && occupiedBig[4] != -1 && occupiedBig[6] != -1 && occupiedBig[2] == occupiedBig[4] && occupiedBig[4] == occupiedBig[6]){
+					return true;
+				}
+				return false;
+			}
+
+			function fullOccupied(idx){
+				for (let i = 0 ; i<9 ; i++){
+					if (squares[idx][i].occupied == -1){
+						return false;
+					}
+				}
+				return true;
+			}
+
+			function drawHighLight(){
+				stroke("#fffc4c");
+				strokeWeight(20);
+				noFill();
+				switch(next){
+				case 0:
+						rect(width / 2 - gridsize - gapsize - gridsize / 2 - 24, height / 2 - gridsize - gapsize - gridsize / 2 - 24, 300, 300);
+						break;
+				case 1:
+						rect(width / 2 - gridsize / 2 - 24, height / 2 - gridsize - gapsize - gridsize / 2 - 24, 300, 300);
+						break;
+				case 2:
+						rect(width / 2 + gridsize + gapsize - gridsize / 2 - 24, height / 2 - gridsize - gapsize - gridsize / 2 - 24, 300, 300);
+						break;
+				case 3:
+						rect(width / 2 - gridsize - gapsize - gridsize / 2 - 24, height / 2 - gridsize / 2 - 24, 300, 300);
+						break;
+				case 4:
+						rect(width / 2 - gridsize / 2 - 24, height / 2 - gridsize / 2 - 24, 300, 300);
+						break;
+				case 5:
+						rect(width / 2 + gridsize + gapsize - gridsize / 2 - 24, height / 2 - gridsize / 2 - 24, 300, 300);
+						break;
+				case 6:
+						rect(width / 2 - gridsize - gapsize - gridsize / 2 - 24, height / 2 + gridsize + gapsize - gridsize / 2 - 24, 300, 300);
+						break;
+				case 7:
+						rect(width / 2 - gridsize / 2 - 24, height / 2 + gridsize + gapsize - gridsize / 2 - 24, 300, 300);
+						break;
+				case 8:
+						rect(width / 2 + gridsize + gapsize - gridsize / 2 - 24, height / 2 + gridsize + gapsize - gridsize / 2 - 24, 300, 300);
+						break;
 				}
 			}
-		}
-		else {
-			for (let i = 0 ; i<9 ; i++){
-				for (let j = 0 ; j<9 ; j++){
-					if (squares[i][j].onClick(player)){
-						next = j;
-						player++;
-						player %= 2;
+
+			function setupGrids(){
+				setupGrid(width / 2 - gridsize - gapsize, height / 2 - gridsize - gapsize);
+				setupGrid(width / 2, height / 2 - gridsize - gapsize);
+				setupGrid(width / 2 + gridsize + gapsize, height / 2 - gridsize - gapsize);
+				setupGrid(width / 2 - gridsize - gapsize, height / 2);
+				setupGrid(width / 2, height / 2);
+				setupGrid(width / 2 + gridsize + gapsize, height / 2);
+				setupGrid(width / 2 - gridsize - gapsize, height / 2 + gridsize + gapsize);
+				setupGrid(width / 2, height / 2 + gridsize + gapsize);
+				setupGrid(width / 2 + gridsize + gapsize, height / 2 + gridsize + gapsize);
+			}
+
+			function setupGrid(x, y){
+				let tmp = [];
+				tmp.push(new Square(x - 85, y - 85, squareSize));
+				tmp.push(new Square(x, y - 85, squareSize));
+				tmp.push(new Square(x + 85, y - 85, squareSize));
+				tmp.push(new Square(x - 85, y, squareSize));
+				tmp.push(new Square(x, y, squareSize));
+				tmp.push(new Square(x + 85, y, squareSize));
+				tmp.push(new Square(x - 85, y + 85, squareSize));
+				tmp.push(new Square(x, y + 85, squareSize));
+				tmp.push(new Square(x + 85, y + 85, squareSize));
+				squares.push(tmp);
+			}
+
+			function drawGrids(){
+				drawGrid(width / 2 - gridsize - gapsize, height / 2 - gridsize - gapsize, 0);
+				drawGrid(width / 2, height / 2 - gridsize - gapsize, 1);
+				drawGrid(width / 2 + gridsize + gapsize, height / 2 - gridsize - gapsize, 2);
+				drawGrid(width / 2 - gridsize - gapsize, height / 2, 3);
+				drawGrid(width / 2, height / 2, 4);
+				drawGrid(width / 2 + gridsize + gapsize, height / 2, 5);
+				drawGrid(width / 2 - gridsize - gapsize, height / 2 + gridsize + gapsize, 6);
+				drawGrid(width / 2, height / 2 + gridsize + gapsize, 7);
+				drawGrid(width / 2 + gridsize + gapsize, height / 2 + gridsize + gapsize, 8);
+			}
+
+			function drawGrid(x, y, idx){
+				strokeWeight(0);
+				if (occupiedBig[idx] == -1){
+					fill(0);
+				}
+				else if (occupiedBig[idx] == 1){
+					fill("#0042ff");
+				}
+				else {
+					fill("#ff0000");
+				}
+				rect(x - gridsize / 2, y - gridsize / 2, gridsize, gridsize);
+			}
+
+			function Square(x, y, size){
+				this.x = x;
+				this.y = y;
+				this.size = size;
+				this.color = color("#FFFFFF");
+				this.occupied = -1;
+				this.tmpopen = false;
+				
+				this.show = function(){
+					fill(this.color);
+					rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+				}
+				
+				this.show2 = function(next, idx){
+					if (next == idx){
+						fill("#999999");
+						rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+					}
+					else {
+						fill("#fffda0");
+						rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
 					}
 				}
-			}	
-		}	
-	}
-	
-}
-
-function check(idx){
-	let tmp = squares[idx];
-	for (let i = 0 ; i<9 ; i+=3){
-		if (tmp[i].occupied == -1 || tmp[i+1].occupied == -1 || tmp[i+2].occupied == -1){
-			continue;
-		}
-		if (tmp[i].occupied == tmp[i+1].occupied && tmp[i+1].occupied == tmp[i+2].occupied){
-			occupiedBig[idx] = player;
-			return true;
-		}
-	}
-	for (let i = 0 ; i<3 ; i++){
-		if (tmp[i].occupied == -1 || tmp[i+3].occupied == -1 || tmp[i+6].occupied == -1){
-			continue;
-		}
-		if (tmp[i].occupied == tmp[i+3].occupied && tmp[i+3].occupied == tmp[i+6].occupied){
-			occupiedBig[idx] = player;
-			return true;
-		}
-	}
-	if (tmp[0].occupied != -1 && tmp[4].occupied != -1 && tmp[8].occupied != -1 && tmp[0].occupied == tmp[4].occupied && tmp[4].occupied == tmp[8].occupied){
-		occupiedBig[idx] = player;
-		return true;
-	}
-	if (tmp[2].occupied != -1 && tmp[4].occupied != -1 && tmp[6].occupied != -1 && tmp[2].occupied == tmp[4].occupied && tmp[4].occupied == tmp[6].occupied){
-		occupiedBig[idx] = player;
-		return true;
-	}
-	return false;
-}
-
-function checkBig(){
-	for (let i = 0 ; i<9 ; i+=3){
-		if (occupiedBig[i] == -1 || occupiedBig[i+1] == -1 || occupiedBig[i+2] == -1){
-			continue;
-		}
-		if (occupiedBig[i] == occupiedBig[i+1] && occupiedBig[i+1] == occupiedBig[i+2]){
-			return true;
-		}
-	}
-	for (let i = 0 ; i<3 ; i++){
-		if (occupiedBig[i] == -1 || occupiedBig[i+3] == -1 || occupiedBig[i+6] == -1){
-			continue;
-		}
-		if (occupiedBig[i] == occupiedBig[i+3] && occupiedBig[i+3] == occupiedBig[i+6]){
-			return true;
-		}
-	}
-	if (occupiedBig[0] != -1 && occupiedBig[4] != -1 && occupiedBig[8] != -1 && occupiedBig[0] == occupiedBig[4] && occupiedBig[4] == occupiedBig[8]){
-		return true;
-	}
-	if (occupiedBig[2] != -1 && occupiedBig[4] != -1 && occupiedBig[6] != -1 && occupiedBig[2] == occupiedBig[4] && occupiedBig[4] == occupiedBig[6]){
-		return true;
-	}
-	return false;
-}
-
-function drawHighLight(){
-	stroke("#fffc4c");
-	strokeWeight(20);
-	noFill();
-	switch(next){
-	case 0:
-			rect(width / 2 - gridsize - gapsize - gridsize / 2 - 24, height / 2 - gridsize - gapsize - gridsize / 2 - 24, 300, 300);
-			break;
-	case 1:
-			rect(width / 2 - gridsize / 2 - 24, height / 2 - gridsize - gapsize - gridsize / 2 - 24, 300, 300);
-			break;
-	case 2:
-			rect(width / 2 + gridsize + gapsize - gridsize / 2 - 24, height / 2 - gridsize - gapsize - gridsize / 2 - 24, 300, 300);
-			break;
-	case 3:
-			rect(width / 2 - gridsize - gapsize - gridsize / 2 - 24, height / 2 - gridsize / 2 - 24, 300, 300);
-			break;
-	case 4:
-			rect(width / 2 - gridsize / 2 - 24, height / 2 - gridsize / 2 - 24, 300, 300);
-			break;
-	case 5:
-			rect(width / 2 + gridsize + gapsize - gridsize / 2 - 24, height / 2 - gridsize / 2 - 24, 300, 300);
-			break;
-	case 6:
-			rect(width / 2 - gridsize - gapsize - gridsize / 2 - 24, height / 2 + gridsize + gapsize - gridsize / 2 - 24, 300, 300);
-			break;
-	case 7:
-			rect(width / 2 - gridsize / 2 - 24, height / 2 + gridsize + gapsize - gridsize / 2 - 24, 300, 300);
-			break;
-	case 8:
-			rect(width / 2 + gridsize + gapsize - gridsize / 2 - 24, height / 2 + gridsize + gapsize - gridsize / 2 - 24, 300, 300);
-			break;
-	}
-}
-
-function setupGrids(){
-	setupGrid(width / 2 - gridsize - gapsize, height / 2 - gridsize - gapsize);
-	setupGrid(width / 2, height / 2 - gridsize - gapsize);
-	setupGrid(width / 2 + gridsize + gapsize, height / 2 - gridsize - gapsize);
-	setupGrid(width / 2 - gridsize - gapsize, height / 2);
-	setupGrid(width / 2, height / 2);
-	setupGrid(width / 2 + gridsize + gapsize, height / 2);
-	setupGrid(width / 2 - gridsize - gapsize, height / 2 + gridsize + gapsize);
-	setupGrid(width / 2, height / 2 + gridsize + gapsize);
-	setupGrid(width / 2 + gridsize + gapsize, height / 2 + gridsize + gapsize);
-}
-
-function setupGrid(x, y){
-	let tmp = [];
-	tmp.push(new Square(x - 85, y - 85, squareSize));
-	tmp.push(new Square(x, y - 85, squareSize));
-	tmp.push(new Square(x + 85, y - 85, squareSize));
-	tmp.push(new Square(x - 85, y, squareSize));
-	tmp.push(new Square(x, y, squareSize));
-	tmp.push(new Square(x + 85, y, squareSize));
-	tmp.push(new Square(x - 85, y + 85, squareSize));
-	tmp.push(new Square(x, y + 85, squareSize));
-	tmp.push(new Square(x + 85, y + 85, squareSize));
-	squares.push(tmp);
-}
-
-function drawGrids(){
-	drawGrid(width / 2 - gridsize - gapsize, height / 2 - gridsize - gapsize, 0);
-	drawGrid(width / 2, height / 2 - gridsize - gapsize, 1);
-	drawGrid(width / 2 + gridsize + gapsize, height / 2 - gridsize - gapsize, 2);
-	drawGrid(width / 2 - gridsize - gapsize, height / 2, 3);
-	drawGrid(width / 2, height / 2, 4);
-	drawGrid(width / 2 + gridsize + gapsize, height / 2, 5);
-	drawGrid(width / 2 - gridsize - gapsize, height / 2 + gridsize + gapsize, 6);
-	drawGrid(width / 2, height / 2 + gridsize + gapsize, 7);
-	drawGrid(width / 2 + gridsize + gapsize, height / 2 + gridsize + gapsize, 8);
-}
-
-function drawGrid(x, y, idx){
-	strokeWeight(0);
-	if (occupiedBig[idx] == -1){
-		fill(0);
-	}
-	else if (occupiedBig[idx] == 1){
-		fill("#0042ff");
-	}
-	else {
-		fill("#ff0000");
-	}
-	rect(x - gridsize / 2, y - gridsize / 2, gridsize, gridsize);
-}
-
-function Square(x, y, size){
-	this.x = x;
-	this.y = y;
-	this.size = size;
-	this.color = color("#FFFFFF");
-	this.occupied = -1;
-	
-	this.show = function(){
-		fill(this.color);
-		rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-	}
-	
-	this.onClick = function(player){
-		if (this.occupied == -1 && mouseX >= this.x - this.size / 2 && mouseX < this.x + this.size / 2 && mouseY >= this.y - this.size / 2 && mouseY < this.y + this.size / 2){
-			if (player == 1){
-				this.color = color("#6d93ff");
+				
+				this.onClick = function(player){
+					if (mouseX >= this.x - this.size / 2 && mouseX < this.x + this.size / 2 && mouseY >= this.y - this.size / 2 && mouseY < this.y + this.size / 2){
+						if (this.occupied == -1){
+							if (player == 1){
+								this.color = color("#6d93ff");
+							}
+							else {
+								this.color = color("#ff6d6d");
+							}
+							this.occupied = player;
+							
+							return true;
+						}
+						if (this.tmpopen){
+							this.tmpopen = false;
+							return true;
+						}	
+					}
+					
+					return false;
+				}
 			}
-			else {
-				this.color = color("#ff6d6d");
-			}
-			this.occupied = player;
-			
-			return true;
-		}
-		return false;
-	}
-}
 		</script>
 	</head>
 	<body></body>
