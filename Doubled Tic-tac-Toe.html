@@ -33,12 +33,9 @@
 						squares[i][j].show();
 					}
 				}
-				if (next > 0 && fullOccupied(next)){
+				if (next >= 0 && fullOccupied(next)){
 					for (let i = 0 ; i<9 ; i++){
-						if (next != i){
-							squares[next][i].tmpopen = true;
-						}
-						squares[next][i].show2(next, i);
+						squares[next][i].show2(next != i && !fullOccupied(i));
 					}
 				}
 				if (next >= 0){
@@ -270,13 +267,14 @@
 					rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
 				}
 				
-				this.show2 = function(next, idx){
-					if (next == idx){
-						fill("#999999");
+				this.show2 = function(accessible){
+					this.tmpopen = accessible;
+					if (accessible){
+						fill("#fffda0");
 						rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
 					}
 					else {
-						fill("#fffda0");
+						fill("#999999");
 						rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
 					}
 				}
