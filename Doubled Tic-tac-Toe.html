@@ -5,12 +5,26 @@
 			const gridsize = 250;
 			const gapsize = 50
 			const squareSize = 80;
+			const tintLevel = 191;
+
+			var img_o;
+			var img_x;
+			var img_o_big;
+			var img_x_big;
 
 			squares = [];
 			next = -1;
 			player = 1;
 			winner = -1;
 			occupiedBig = [-1, -1, -1, -1, -1, -1, -1, -1, -1];
+
+
+			function preload(){
+				img_o = loadImage("https://raw.githubusercontent.com/hm-ysjiang/Doubled-Tic-tac-toe/master/assets/O.png");
+				img_x = loadImage("https://raw.githubusercontent.com/hm-ysjiang/Doubled-Tic-tac-toe/master/assets/X.png");
+				img_o_big = loadImage("https://raw.githubusercontent.com/hm-ysjiang/Doubled-Tic-tac-toe/master/assets/O_big.png");
+				img_x_big = loadImage("https://raw.githubusercontent.com/hm-ysjiang/Doubled-Tic-tac-toe/master/assets/X_big.png");
+			}
 
 			function setup(){
 				createCanvas(950, 1500);
@@ -40,6 +54,42 @@
 				}
 				if (next >= 0){
 					drawHighLight();
+				}
+				for (let i = 0 ; i<9 ; i++){
+					push();
+					tint(255, tintLevel);
+					if (occupiedBig[i] != -1){
+						switch(i){
+						case 0:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 - gridsize - gapsize - gridsize / 2, height / 2 - gridsize - gapsize - gridsize / 2);
+							break;
+						case 1:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 - gridsize / 2, height / 2 - gridsize - gapsize - gridsize / 2);
+							break;
+						case 2:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 + gridsize + gapsize - gridsize / 2, height / 2 - gridsize - gapsize - gridsize / 2);
+							break;
+						case 3:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 - gridsize - gapsize - gridsize / 2, height / 2 - gridsize / 2);
+							break;
+						case 4:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 - gridsize / 2, height / 2 - gridsize / 2);
+							break;
+						case 5:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 + gridsize + gapsize - gridsize / 2, height / 2 - gridsize / 2);
+							break;
+						case 6:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 - gridsize - gapsize - gridsize / 2, height / 2 + gridsize + gapsize - gridsize / 2);
+							break;
+						case 7:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 - gridsize / 2, height / 2 + gridsize + gapsize - gridsize / 2);
+							break;
+						case 8:
+							image((occupiedBig[i] == 1 ? img_o_big : img_x_big), width / 2 + gridsize + gapsize - gridsize / 2, height / 2 + gridsize + gapsize - gridsize / 2);
+							break;
+						}
+					}
+					pop();
 				}
 				
 				if (winner < 0){
@@ -265,6 +315,12 @@
 				this.show = function(){
 					fill(this.color);
 					rect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+					if (this.occupied == 1){
+						image(img_o, this.x - this.size / 2, this.y - this.size / 2);
+					}
+					else if (this.occupied == 0){
+						image(img_x, this.x - this.size / 2, this.y - this.size / 2);
+					}
 				}
 				
 				this.show2 = function(accessible){
