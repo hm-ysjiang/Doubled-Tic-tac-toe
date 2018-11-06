@@ -380,7 +380,7 @@ function drawTutorial(){
 			break;
 		case 250:
 			blocks[0][4].occupier = 1;
-			player = 1;
+			player = 0;
 			next = 4;
 			break;
 		case 300:
