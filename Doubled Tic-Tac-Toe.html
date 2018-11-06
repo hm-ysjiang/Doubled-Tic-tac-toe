@@ -361,40 +361,40 @@
 					drawBlocks(0, 0);
 					drawGridsForeground(0, 0);
 					drawHighlight(0, 0);
-					drawText(tutorialAnimationClock != 260);
+					drawText(tutorialAnimationClock != 310);
 					switch (tutorialAnimationClock){
 					case 50:
 						blocks[4][4].occupier = 1;
 						player = 0;
 						next = 4;
 						break;
-					case 90:
+					case 100:
 						blocks[4][3].occupier = 0;
 						player = 1;
 						next = 3;
 						break;
-					case 130:
+					case 150:
 						blocks[3][4].occupier = 1;
 						player = 0;
 						next = 4;
 						break;
-					case 170:
+					case 200:
 						blocks[4][0].occupier = 0;
 						player = 1;
 						next = 0;
 						break;
-					case 210:
+					case 250:
 						blocks[0][4].occupier = 1;
 						player = 1;
 						next = 4;
 						break;
-					case 250:
+					case 300:
 						blocks[4][6].occupier = 0;
 						player = 1;
 						next = 6;
 						occupied[4] = 0;
 						break;
-					case 260:
+					case 310:
 						push();
 						translate(center);
 						textSize(textsize - 10);
