@@ -4,7 +4,7 @@ function Block(x, y){
 	this.occupier = -1;
 	this.tmpAccess = false;
 	
-	this.show = function (){
+	this.show = function (offsetX, offsetY){
 		push();
 		translate(center);
 		noStroke();
@@ -19,12 +19,12 @@ function Block(x, y){
 			fill(white);
 		}
 		rectMode(CENTER);
-		rect(this.x, this.y, blockSize, blockSize);
+		rect(this.x + offsetX, this.y + offsetY, blockSize, blockSize);
 		if (this.occupier == 0){
-			image(img_x, this.x - blockSize / 2, this.y - blockSize / 2, blockSize, blockSize);
+			image(img_x, this.x - blockSize / 2 + offsetX, this.y - blockSize / 2 + offsetY, blockSize, blockSize);
 		}
 		else if (this.occupier == 1){
-			image(img_o, this.x - blockSize / 2, this.y - blockSize / 2, blockSize, blockSize);
+			image(img_o, this.x - blockSize / 2 + offsetX, this.y - blockSize / 2 + offsetY, blockSize, blockSize);
 		}
 		pop();
 	}

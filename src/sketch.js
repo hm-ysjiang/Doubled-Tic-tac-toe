@@ -33,12 +33,17 @@ var blockPos = [];
 var textsize;
 var space;
 //game
-var blocks = [];
+var blocks;
 var center;
-var occupied = [-1, -1, -1, -1, -1, -1, -1, -1, -1];
+var occupied;
 var winner;
-var player = 1;
-var next = -1;
+var player;
+var next;
+//TutorialMode
+var tutorialMode = false;
+var tutorialPhase = -1;
+var tutorialYOffset;
+var tutorialAnimationClock = -1;
 
 
 function setup(){
@@ -48,11 +53,10 @@ function setup(){
 	horizontal_mode = (min(canvasW, canvasH) == canvasH);
 	setRelativeSize(horizontal_mode ? canvasH - 114 : canvasW);
 	setupRelativePosition();
+	resetGameData();
 	setupGrids();
 	setTextSize();
 	translate(center);
-	
-	winner = -1;
 }
 
 function preload(){
@@ -61,47 +65,70 @@ function preload(){
 }
 
 function draw(){
-	drawBackground();
-	drawGridsBackground();
-	drawBlocks();
-	drawExceptions();
-	drawGridsForeground();
-	drawHighlight();
-	drawText();
+	if (!tutorialMode){
+		drawBackground();
+		drawGridsBackground(0, 0);
+		drawBlocks(0, 0);
+		drawExceptions();
+		drawGridsForeground(0, 0);
+		drawHighlight(0, 0);
+		drawText(true);	
+	}
+	else {
+		drawTutorial();
+	}
 }
 
 function mousePressed(){
-	if (winner == -1){
-		if (next == -1){
-			for (let i = 0 ; i<9 ; i++){
+	if (!tutorialMode){
+		if (next == -1 && mouseX - center.x > width / 2 - 64 && mouseY < 42){
+			tutorialMode = true;
+			tutorialPhase = 0;
+			tutorialYOffset = height / 2 - gridSize * 3 / 2 - gapSize - 40;
+			tutorialAnimationClock = 0;
+		}
+		else if (winner == -1){
+			if (next == -1){
+				for (let i = 0 ; i<9 ; i++){
+					for (let j = 0 ; j<9 ; j++){
+						if (blocks[i][j].onClick(mouseX - center.x, mouseY - center.y)){
+							next = j;
+							player++;
+							player %= 2;
+							break;
+						}
+					}
+				}
+			}
+			else {
 				for (let j = 0 ; j<9 ; j++){
-					if (blocks[i][j].onClick(mouseX - center.x, mouseY - center.y)){
+					if (blocks[next][j].onClick(mouseX - center.x, mouseY - center.y)){
+						if (occupied[next] == -1){
+							if (check(next)){
+								occupied[next] = player;
+								if (checkAll()){
+									winner = player;
+								}
+							}
+						}
 						next = j;
 						player++;
 						player %= 2;
 						break;
-					}
+					}	
 				}
 			}
+		}	
+	}
+	else {
+		if (tutorialPhase == 3){
+			tutorialMode = false;
+			tutorialPhase = -1;
+			resetGameData();
 		}
-		else {
-			for (let j = 0 ; j<9 ; j++){
-				if (blocks[next][j].onClick(mouseX - center.x, mouseY - center.y)){
-					if (occupied[next] == -1){
-						if (check(next)){
-							occupied[next] = player;
-							if (checkAll()){
-								winner = player;
-							}
-						}
-					}
-					next = j;
-					player++;
-					player %= 2;
-					break;
-				}	
-			}
-		}
+		tutorialPhase++;
+		tutorialAnimationClock = 0;
+		resetGameData();
 	}
 }
 
@@ -171,6 +198,15 @@ function setTextSize(){
 	}
 }
 
+function resetGameData(){
+	winner = -1;
+	occupied = [-1, -1, -1, -1, -1, -1, -1, -1, -1]
+	player = 1;
+	next = -1;
+	blocks = [];
+	setupGrids();
+}
+
 function drawBackground(){
 	switch(winner){
 	case 0:
@@ -184,15 +220,15 @@ function drawBackground(){
 	}
 }
 
-function drawBlocks(){
+function drawBlocks(offsetX, offsetY){
 	for (let i = 0 ; i<9 ; i++){
 		for (let j = 0 ; j<9 ; j++){
-			blocks[i][j].show();
+			blocks[i][j].show(offsetX, offsetY);
 		}	
 	}
 }
 
-function drawGridsBackground(){
+function drawGridsBackground(offsetX, offsetY){
 	for (let i = 0 ; i<9 ; i++){
 		push();
 		translate(center);
@@ -208,31 +244,31 @@ function drawGridsBackground(){
 		default:
 			fill(grid_black);
 		}
-		rect(gridPos[i][0], gridPos[i][1], gridSize, gridSize);
+		rect(gridPos[i][0] + offsetX, gridPos[i][1] + offsetY, gridSize, gridSize);
 		pop();
 	}
 }
 
-function drawGridsForeground(){
+function drawGridsForeground(offsetX, offsetY){
 	for (let i = 0 ; i<9 ; i++){
 		if (occupied[i] == 0){
 			push();
 			translate(center);
 			tint(255, tintLevel);
-			image(img_x, gridPos[i][0] - gridSize / 2, gridPos[i][1] - gridSize / 2, gridSize, gridSize);
+			image(img_x, gridPos[i][0] - gridSize / 2 + offsetX, gridPos[i][1] - gridSize / 2 + offsetY, gridSize, gridSize);
 			pop();
 		}
 		else if (occupied[i] == 1){
 			push();
 			translate(center);
 			tint(255, tintLevel);
-			image(img_o, gridPos[i][0] - gridSize / 2, gridPos[i][1] - gridSize / 2, gridSize, gridSize);
+			image(img_o, gridPos[i][0] - gridSize / 2 + offsetX, gridPos[i][1] - gridSize / 2 + offsetY, gridSize, gridSize);
 			pop();
 		}
 	}
 }
 
-function drawHighlight(){
+function drawHighlight(offsetX, offsetY){
 	if (next != -1){
 		push();
 		translate(center);
@@ -240,37 +276,253 @@ function drawHighlight(){
 		strokeWeight(gapSize / 3);
 		noFill();
 		rectMode(CENTER);
-		rect(gridPos[next][0], gridPos[next][1], gridSize + gapSize, gridSize + gapSize);
+		rect(gridPos[next][0] + offsetX, gridPos[next][1] + offsetY, gridSize + gapSize, gridSize + gapSize);
 		pop();
 	}
 }
 
-function drawText(){
+function drawTutorial(){
+	drawBackground();
+	drawTutorialText();
+	switch(tutorialPhase){
+	case 0:
+		drawGridsBackground(0, tutorialYOffset);
+		drawBlocks(0, tutorialYOffset);
+		drawGridsForeground(0, tutorialYOffset);
+		drawHighlight(0, tutorialYOffset);
+		switch (tutorialAnimationClock){
+		case 50:
+			blocks[0][0].occupier = 1;
+			next = 0;
+			break;
+		case 90:
+			blocks[0][0].occupier = -1;
+			blocks[0][1].occupier = 1;
+			next = 1;
+			break;
+		case 130:
+			blocks[0][1].occupier = -1;
+			blocks[0][2].occupier = 1;
+			next = 2;
+			break;
+		case 170:
+			blocks[0][2].occupier = -1;
+			blocks[0][3].occupier = 1;
+			next = 3;
+			break;
+		case 210:
+			blocks[0][3].occupier = -1;
+			blocks[0][4].occupier = 1;
+			next = 4;
+			break;
+		case 250:
+			blocks[0][4].occupier = -1;
+			blocks[0][5].occupier = 1;
+			next = 5;
+			break;
+		case 290:
+			blocks[0][5].occupier = -1;
+			blocks[0][6].occupier = 1;
+			next = 6;
+			break;
+		case 330:
+			blocks[0][6].occupier = -1;
+			blocks[0][7].occupier = 1;
+			next = 7;
+			break;
+		case 370:
+			blocks[0][7].occupier = -1;
+			blocks[0][8].occupier = 1;
+			next = 8;
+			break;
+		case 380:
+			push();
+			translate(center);
+			textSize(textsize - 10);
+			fill("white");
+			textAlign(CENTER, TOP);
+			text("The tile you click", 0, - height / 4 - 120);
+			text("decides where the other player", 0, - height / 4 - 90);
+			text("should play in the next turn", 0, - height / 4 - 60);
+			pop();
+			tutorialAnimationClock--;
+		}
+		
+		tutorialAnimationClock++;
+		break;
+		
+	case 1:
+		drawGridsBackground(0, 0);
+		drawBlocks(0, 0);
+		drawGridsForeground(0, 0);
+		drawHighlight(0, 0);
+		drawText(tutorialAnimationClock != 260);
+		switch (tutorialAnimationClock){
+		case 50:
+			blocks[4][4].occupier = 1;
+			player = 0;
+			next = 4;
+			break;
+		case 90:
+			blocks[4][3].occupier = 0;
+			player = 1;
+			next = 3;
+			break;
+		case 130:
+			blocks[3][4].occupier = 1;
+			player = 0;
+			next = 4;
+			break;
+		case 170:
+			blocks[4][0].occupier = 0;
+			player = 1;
+			next = 0;
+			break;
+		case 210:
+			blocks[0][4].occupier = 1;
+			player = 1;
+			next = 4;
+			break;
+		case 250:
+			blocks[4][6].occupier = 0;
+			player = 1;
+			next = 6;
+			occupied[4] = 0;
+			break;
+		case 260:
+			push();
+			translate(center);
+			textSize(textsize - 10);
+			fill("white");
+			textAlign(CENTER, TOP);
+			text("You 'occupy' the area", 0, -(height / 2 - textsize / 2));
+			textAlign(CENTER, BOTTOM);
+			text("if you match a line in it", 0, (height / 2 - textsize / 2));
+			pop();
+			tutorialAnimationClock--;
+		}
+		
+		
+		tutorialAnimationClock++;
+		break;
+		
+	case 2:
+		drawGridsBackground(0, 0);
+		drawBlocks(0, 0);
+		drawGridsForeground(0, 0);
+		drawHighlight(0, 0);
+		blocks[0][6].occupier = 1;
+		blocks[0][7].occupier = 1;
+		blocks[0][8].occupier = 1;
+		occupied[0] = 1;
+		blocks[1][1].occupier = 0;
+		blocks[1][6].occupier = 1;
+		blocks[1][7].occupier = 1;
+		blocks[2][3].occupier = 1;
+		blocks[2][6].occupier = 1;
+		blocks[2][7].occupier = 1;
+		blocks[2][8].occupier = 1;
+		occupied[2] = 1;
+		blocks[3][5].occupier = 0;
+		blocks[3][7].occupier = 0;
+		blocks[4][7].occupier = 0;
+		blocks[4][8].occupier = 1;
+		blocks[5][6].occupier = 1;
+		blocks[5][7].occupier = 1;
+		blocks[6][0].occupier = 0;
+		blocks[6][2].occupier = 0;
+		blocks[6][4].occupier = 0;
+		blocks[6][8].occupier = 0;
+		occupied[6] = 0;
+		blocks[7][0].occupier = 0;
+		blocks[7][1].occupier = 1;
+		blocks[7][2].occupier = 0;
+		blocks[7][4].occupier = 1;
+		blocks[7][5].occupier = 0;
+		blocks[7][8].occupier = 0;
+		occupied[7] = 0;
+		blocks[8][0].occupier = 0;
+		blocks[8][1].occupier = 0;
+		blocks[8][2].occupier = 0;
+		blocks[8][3].occupier = 1;
+		occupied[8] = 0;
+		next = 8;
+		winner = 0;
+		push();
+		translate(center);
+		textSize(textsize - 10);
+		fill("white");
+		textAlign(CENTER, TOP);
+		text("You win if you match a line", 0, -(height / 2 - textsize / 2));
+		textAlign(CENTER, BOTTOM);
+		text("in the outer area", 0, (height / 2 - textsize / 2));
+		fill("gray");
+		textAlign(CENTER, TOP);
+		text("Player 2 won the game", 0, -(height / 2 - textsize / 2) + 30);
+		textAlign(CENTER, BOTTOM);
+		text("Player 2 won the game", 0, (height / 2 - textsize / 2) - 30);
+		pop();
+		
+		break;
+	case 3:
+		push();
+		translate(center);
+		textSize(textsize - 10);
+		fill("white");
+		textAlign(CENTER);
+		text("The tutorial is over", 0, 0);
+		pop();
+		break;
+	}
+}
+
+function drawTutorialText(){
 	push();
 	translate(center);
-	noStroke();
-	textSize(textsize);
-	textAlign(CENTER);
-	if (winner == -1){
-		if (player == 0){
-			fill(text_red);
-		}
-		else if (player == 1){
-			fill(text_blue);
-		}
-		textAlign(CENTER, TOP);
-		text("Player " + (2-player) + "'s turn", 0, -(height / 2 - textsize / 2));
-		textAlign(CENTER, BOTTOM);
-		text("Player " + (2-player) + "'s turn", 0, (height / 2 - textsize / 2));		
-	}
-	else {
-		fill(white);
-		textAlign(CENTER, TOP);
-		text("Player " + (2-winner) + " won the game", 0, -(height / 2 - textsize / 2));
-		textAlign(CENTER, BOTTOM);
-		text("Player " + (2-winner) + " won the game", 0, (height / 2 - textsize / 2));	
-	}
+	textSize(textsize - 20);
+	fill("black");
+	textAlign(CENTER, TOP);
+	text("Tutorial Mode", 0, -height / 2);
+	textAlign(CENTER, BOTTOM);
+	text("Click to continue or skip", 0, height / 2);
 	pop();
+}
+
+function drawText(doDraw){
+	if (doDraw){
+		push();
+		translate(center);
+		noStroke();
+		textSize(textsize);
+		textAlign(CENTER);
+		if (winner == -1){
+			if (player == 0){
+				fill(text_red);
+			}
+			else if (player == 1){
+				fill(text_blue);
+			}
+			textAlign(CENTER, TOP);
+			text("Player " + (2-player) + "'s turn", 0, -(height / 2 - textsize / 2));
+			textAlign(CENTER, BOTTOM);
+			text("Player " + (2-player) + "'s turn", 0, (height / 2 - textsize / 2));		
+		}
+		else {
+			fill(white);
+			textAlign(CENTER, TOP);
+			text("Player " + (2-winner) + " won the game", 0, -(height / 2 - textsize / 2));
+			textAlign(CENTER, BOTTOM);
+			text("Player " + (2-winner) + " won the game", 0, (height / 2 - textsize / 2));	
+		}
+		if (next == -1 && !tutorialMode){
+			fill(white);
+			textAlign(CENTER, TOP);
+			textSize(textsize - 15);
+			text("How To", width / 2 - 32, -height / 2);
+			text("Play", width / 2 - 32, -height / 2 + 20);
+		}
+		pop();	
+	}
 }
 
 function drawExceptions(){
