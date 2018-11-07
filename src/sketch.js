@@ -44,6 +44,7 @@ var tutorialMode = false;
 var tutorialPhase = -1;
 var tutorialYOffset;
 var tutorialAnimationClock = -1;
+var tutorialDelay = -1;
 
 
 function setup(){
@@ -76,6 +77,9 @@ function draw(){
 	}
 	else {
 		drawTutorial();
+		if (tutorialDelay >= 0 && tutorialDelay < 20){
+			tutorialDelay++;
+		}
 	}
 }
 
@@ -86,6 +90,7 @@ function mousePressed(){
 			tutorialPhase = 0;
 			tutorialYOffset = height / 2 - gridSize * 3 / 2 - gapSize - 40;
 			tutorialAnimationClock = 0;
+			tutorialDelay = 0;
 		}
 		else if (winner == -1){
 			if (next == -1){
@@ -125,10 +130,14 @@ function mousePressed(){
 			tutorialMode = false;
 			tutorialPhase = -1;
 			resetGameData();
+			tutorialDelay = -1;
 		}
-		tutorialPhase++;
-		tutorialAnimationClock = 0;
-		resetGameData();
+		else if (tutorialDelay == 20){
+			tutorialPhase++;
+			tutorialAnimationClock = 0;
+			tutorialDelay = 0;
+			resetGameData();	
+		}
 	}
 }
 
