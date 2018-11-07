@@ -88,7 +88,7 @@ function mousePressed(){
 		if (next == -1 && width - mouseX < textsize * 7 / 4 && mouseY < textsize + 1){
 			tutorialMode = true;
 			tutorialPhase = 0;
-			tutorialYOffset = height / 2 - gridSize * 3 / 2 - gapSize - 20;
+			tutorialYOffset = height / 2 - gridSize * 3 / 2 - gapSize - textsize / 2;
 			tutorialAnimationClock = 0;
 			tutorialDelay = 0;
 		}
@@ -153,7 +153,7 @@ function setRelativeSize(length){
 	gapSize = length / 19;
 	gapSize -= gapSize % 10;
 	gridSize = gapSize * 5;
-	blockgapSize = gridSize / 50
+	blockgapSize = gridSize / 50;
 	blockSize = blockgapSize * 16;
 }
 
